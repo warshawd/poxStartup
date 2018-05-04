@@ -20,6 +20,52 @@ class JellyFishTop(Topo):
     def build(self):
 
 
+            # A semi complicated regular graph tology genereated using topogen.py
+
+            # k = 12
+            # r = 3 #for switch to switch
+            # #k-r = for servers
+            # num_switches = 14
+            # num_servers = 14
+            # switch_names = ["s" + str(i) for i in range(num_switches)]
+            # server_names = ["h" + str(i) for i in range(num_servers)]
+            # switch_neighbors = {}
+            # switches = []
+            # servers = []
+            # for i in range(num_switches) :
+            #     switch_neighbors[i] = set([])
+            # for i in range(num_switches) :
+            #     switches.append(self.addSwitch( switch_names[i] ))
+            # for i in range(num_servers) :
+            #     servers.append(self.addHost( server_names[i] ))
+            #     self.addLink(server_names[i], switch_names[i])
+
+
+            # def addLinks(source, targets):
+            #   for i in range(len(targets)):
+            #     if targets[1] < source:
+            #       continue
+            #     self.addLink(switch_names[source], switch_names[targets[i]])
+
+            # addLinks(0, [2, 7, 10])
+            # addLinks(1, [3, 9, 11])
+            # addLinks(2, [0, 7, 11])
+            # addLinks(3, [1, 4, 8])
+            # addLinks(4, [3, 5, 12])
+            # addLinks(5, [4, 6, 11])
+            # addLinks(6, [5, 12, 13])
+            # addLinks(7, [0, 2, 8])
+            # addLinks(8, [3, 7, 9])
+            # addLinks(9, [1, 8, 10])
+            # addLinks(10, [0, 9, 13])
+            # addLinks(11, [1, 2, 5])
+            # addLinks(12, [4, 6, 13])
+            # addLinks(13, [6, 10, 12])
+
+
+            # A small topology
+
+
             # for i in range(5) :
             #     name = 'h'
             #     name += str((i+1))
