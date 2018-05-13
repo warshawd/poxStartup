@@ -46,11 +46,16 @@ from pox.proto.dhcpd import DHCPLease, DHCPD
 from collections import defaultdict
 from pox.openflow.discovery import Discovery
 import time
-import pickle
-
 
 log = core.getLogger()
 
+switch_i_dpid = {}
+switch_i_dpid_a = []
+switch_number_wa = 0
+switch_dpid_i = {}
+
+switches_by_dpid = {}
+switch_to_dest_to_next_port = {}
 
 # Timeout for flows
 FLOW_IDLE_TIMEOUT = 10
@@ -63,10 +68,6 @@ MAX_BUFFERED_PER_IP = 5
 
 # Maximum time to hang on to a buffer for an unknown IP in seconds
 MAX_BUFFER_TIME = 5
-
-numNodes, degree, neighbors, routing, port_offset, switch_dpid_offset, host_dpid_offset = None, None, None, None, None, None, None
-with open('graph_items.pickle', 'rb') as handle:
-    numNodes, degree, neighbors, routing, port_offset, switch_dpid_offset, host_dpid_offset = pickle.load(handle)
 
 class Entry (object):
   """
@@ -97,7 +98,6 @@ class Entry (object):
 def dpid_to_mac (dpid):
   return EthAddr("%012x" % (dpid & 0xffFFffFFffFF,))
 
-
 class Tutorial (object):
   """
   A Tutorial object is created for each switch that connects.
@@ -112,6 +112,10 @@ class Tutorial (object):
     connection.addListeners(self)
 
     self.dpid = dpid
+    # switch_i_dpid[switch_number_wa] = dpid
+    # switch_dpid_i[dpid] = switch_number_wa
+    switch_i_dpid_a.append(dpid)
+    # switch_number_wa += 1
 
     # Use this table to keep track of which ethernet address is on
     # which switch port (keys are MACs, values are ports).
@@ -178,6 +182,7 @@ class Tutorial (object):
 
     #tldr: who are we?  Then look up who we should send to.  Done.
     # self.
+    # dest_to_next_port = switch_to_dest_to_next_port[self.dpid]
     # dest = dest_to_next_port[packet.dst]
 
 
@@ -191,6 +196,7 @@ class Tutorial (object):
 
     log.info("\n str \n")
     # log.info(self.dpid)
+    # log.info(switch_i_dpid_a)
     log.info("\n end \n")
 
     ip = packet.find('ipv4')
@@ -206,10 +212,21 @@ class Tutorial (object):
 
     dest_port = dest #here coincidentally the same, not true in general esp for nontrivial topologies
 
+    # if self.dpid == switch_i_dpid_a[0] or self.dpid == switch_i_dpid_a[1] or self.dpid == switch_i_dpid_a[2] :
     self.resend_packet(packet_in, dest_port)
     # else :
     # self.resend_packet(packet_in, 0)
 
+    # if (self.dpid != switch_i_dpid[2] && self.dpid != switch_i_dpid[3]) :
+    #   self.resend_packet(packet_in, 1)
+    # if packet.dst == switch_i_dpid[0] :
+    #   self.resend_packet(packet_in, 0)
+    # if packet.dst == switch_i_dpid[1] :
+    #    self.resend_packet(packet_in, 0)
+    # if packet.dst == switch_i_dpid[2] :
+    #   self.resend_packet(packet_in, 0)
+    # if packet.dst == switch_i_dpid[3] :
+    #   self.resend_packet(packet_in, 0)
 
 
 
@@ -274,76 +291,214 @@ class Tutorial (object):
 
     dpid = event.connection.dpid
     inport = event.port
+    # packet = event.parsed
+    # if not packet.parsed:
+    #   log.warning("%i %i ignoring unparsed packet", dpid, inport)
+    #   return
 
-    dest_ip_str = ''
+    if dpid not in self.arpTable:
+      # New switch -- create an empty table
+      self.arpTable[dpid] = {}
+      # for fake in self.fakeways:
+      #   self.arpTable[dpid][IPAddr(fake)] = Entry(of.OFPP_NONE,
+      #    dpid)
 
 
     arpp = packet.find('arp')
-    ip = packet.find('ipv4')
-    if arpp is not None :
+    if arpp is not None:
       a = packet.next
-      dest_ip_str = str(a.protodst)
+      log.info(a.opcode)
+      log.info(str(a.protosrc))
+      log.info(str(a.protodst))
 
-      # msg = of.ofp_packet_out(in_port = inport, data = event.ofp,
-      #     action = of.ofp_action_output(port = out_port))
-      # event.connection.send(msg)
-      # return
-    elif ip is not None :
-      dest_ip_str = str(ip.dstip)
-    else :
+      out_port = 0
+
+      if (self.dpid == 55) :
+          if (str(a.protodst) == '10.1.1.1') :
+              out_port = 2
+          elif (str(a.protodst) == '10.2.2.2') :
+              out_port = 3
+          else :
+              out_port = 9
+      if (self.dpid == 77) :
+          if (str(a.protodst) == '10.1.1.1') :
+              out_port = 4
+          elif (str(a.protodst) == '10.2.2.2') :
+              out_port = 5
+          else :
+              out_port = 11
+      if (self.dpid == 99) :
+          if (str(a.protodst) == '10.1.1.1') :
+              out_port = 10
+          elif (str(a.protodst) == '10.2.2.2') :
+              out_port = 12     
+          else :
+              out_port = 8
+
+      msg = of.ofp_packet_out(in_port = inport, data = event.ofp,
+          action = of.ofp_action_output(port = out_port))
+      event.connection.send(msg)
+      return
+
+
+
+
+
+    #   log.info("arp")
+    # if False : 
+      a = packet.next
+      log.info("\n\naaaaaaarrrrrppp\n\n")
+      log.info(a.opcode)
+      log.info(str(a.protosrc))
+      log.info(str(a.protodst))
+      log.info("\n\nSAZZY\n\n")
+      log.info("%i %i ARP %s %s => %s", dpid, inport,
+       {arp.REQUEST:"request",arp.REPLY:"reply"}.get(a.opcode,
+       'op:%i' % (a.opcode,)), str(a.protosrc), str(a.protodst))
+
+      if a.prototype == arp.PROTO_TYPE_IP:
+        if a.hwtype == arp.HW_TYPE_ETHERNET:
+          if a.protosrc != 0:
+
+            # Learn or update port/MAC info
+            if a.protosrc in self.arpTable[dpid]:
+              if self.arpTable[dpid][a.protosrc] != (inport, packet.src):
+                log.info("%i %i RE-learned %s", dpid,inport,str(a.protosrc))
+            else:
+              log.debug("%i %i learned %s", dpid,inport,str(a.protosrc))
+            self.arpTable[dpid][a.protosrc] = Entry(inport, packet.src)
+
+            # Send any waiting packets...
+            # self._send_lost_buffers(dpid, a.protosrc, packet.src, inport)
+
+            if a.opcode == arp.REQUEST:
+              # Maybe we can answer
+
+              if a.protodst in self.arpTable[dpid]:
+                # We have an answer...
+
+                if not self.arpTable[dpid][a.protodst].isExpired():
+                  # .. and it's relatively current, so we'll reply ourselves
+
+                  r = arp()
+                  r.hwtype = a.hwtype
+                  r.prototype = a.prototype
+                  r.hwlen = a.hwlen
+                  r.protolen = a.protolen
+                  r.opcode = arp.REPLY
+                  r.hwdst = a.hwsrc
+                  r.protodst = a.protosrc
+                  r.protosrc = a.protodst
+                  r.hwsrc = self.arpTable[dpid][a.protodst].mac
+                  e = ethernet(type=packet.type, src=dpid_to_mac(dpid),
+                               dst=a.hwsrc)
+                  e.set_payload(r)
+                  log.debug("%i %i answering ARP for %s" % (dpid, inport,
+                   str(r.protosrc)))
+                  msg = of.ofp_packet_out()
+                  msg.data = e.pack()
+                  msg.actions.append(of.ofp_action_output(port =
+                                                          of.OFPP_IN_PORT))
+                  msg.in_port = inport
+                  event.connection.send(msg)
+                  return
+
+      # Didn't know how to answer or otherwise handle this ARP, so just flood it
+      log.debug("%i %i flooding ARP %s %s => %s" % (dpid, inport,
+       {arp.REQUEST:"request",arp.REPLY:"reply"}.get(a.opcode,
+       'op:%i' % (a.opcode,)), str(a.protosrc), str(a.protodst)))
+
+      log.info("\n\n\n\n\nFLOODER\n\n\n\n\n")
+
+      msg = of.ofp_packet_out(in_port = inport, data = event.ofp,
+          action = of.ofp_action_output(port = of.OFPP_FLOOD))
+      event.connection.send(msg)
+
+    # Comment out the following line and uncomment the one after
+    # when starting the exercise.
+    print "Src: " + str(packet.src)
+    print "Dest: " + str(packet.dst)
+    print "Event port: " + str(event.port)
+    # self.act_like_hub(packet, packet_in)
+    log.info("packet in on port")
+    log.info(event.port)
+    log.info("src, dst: ")
+    log.info(packet.src)
+    log.info(packet.dst)
+    log.info("full packet")
+    log.info(packet)
+    log.info("full event")
+    log.info(event)
+    # ip = packet.find('ipv4')
+    # if ip is None:
+    #   # This packet isn't IP!
+    #   self.act_like_switch(packet, packet_in)
+    #   return
+    # log.info("IP!")
+    # log.info(ip.dstip)
+    # dest = int(str(ip.dstip).split('.')[3]) - 1
+    # log.info(IPAddr("10.0.0.1"))
+
+    # self.act_like_switch(packet, packet_in)
+
+    ip = packet.find('ipv4')
+    if ip is None:
       # This packet isn't IP!
       log.info("\n\n\nWELP\n\n\n")
       # self.resend_packet(packet_in, of.OFPP_ALL)
       return
+    log.info("IP! on dpid")
+    log.info(self.dpid)
+    log.info(ip.dstip)
+    # log.info(dir(packet))
+    dest = int(str(ip.dstip).split('.')[3])
+    log.info(dest)
 
 
-    # dest = int(ip_str.split('.')[3])
+    # dpid==55 -> left switch
+    # dpid==77 -> left switch
+    # 10.9.9.9 left host
+    # 10.5.5.5 right host
 
-    out_port = routing[self.dpid - switch_dpid_offset][int(dest_ip_str.split('.')[3])] +  port_offset
-    log.info("\n" + dest_ip_str + "  " + str(out_port))
 
-    # log.info(self.dpid)
-    # if (self.dpid == switch_dpid_offset + 0) :
-    #     if (dest_ip_str == '9.9.9.0') :
-    #         out_port = port_offset + 0
-    #     elif (dest_ip_str == '9.0.0.1') :
-    #         out_port = port_offset + 1
-    #     else :
-    #         out_port = port_offset + 2
-    # elif (self.dpid == switch_dpid_offset + 1) :
-    #     if (dest_ip_str == '9.9.9.0') :
-    #         out_port = port_offset + 0
-    #     elif (dest_ip_str == '9.9.9.1') :
-    #         out_port = port_offset + 1
-    #     else :
-    #         out_port = port_offset + 2
-    # elif (self.dpid == switch_dpid_offset + 2) :
-    #     if (dest_ip_str == '9.9.9.0') :
-    #         out_port = port_offset + 0
-    #     elif (dest_ip_str == '9.9.9.1') :
-    #         out_port = port_offset + 1
-    #     else :
-    #         out_port = port_offset + 2
-    # else:
-    #     log.info("WTF\n")
+    out_port = 0
+
+    if (self.dpid == 55) :
+        if (str(ip.dstip) == '10.1.1.1') :
+            out_port = 2
+        elif (str(ip.dstip) == '10.2.2.2') :
+            out_port = 3
+        else :
+            out_port = 9
+    if (self.dpid == 77) :
+        if (str(ip.dstip) == '10.1.1.1') :
+            out_port = 4
+        elif (str(ip.dstip) == '10.2.2.2') :
+            out_port = 5
+        else :
+            out_port = 11
+    if (self.dpid == 99) :
+        if (str(ip.dstip) == '10.1.1.1') :
+            out_port = 10
+        elif (str(ip.dstip) == '10.2.2.2') :
+            out_port = 12     
+        else :
+            out_port = 8
 
     # dest_port = dest #here coincidentally the same, not true in general esp for nontrivial topologies
 
-
+    # if self.dpid == switch_i_dpid_a[0] or self.dpid == switch_i_dpid_a[1] or self.dpid == switch_i_dpid_a[2] :
     self.resend_packet(packet_in, out_port)#dest_port)
-
-    # msg = of.ofp_packet_out(in_port = inport, data = event.ofp,
-    #     action = of.ofp_action_output(port = out_port))
-    # event.connection.send(msg)
-    return
 
 
   # def _handle_openflow_ConnectionUp (self, event):
+  #   sw = switches_by_dpid.get(event.dpid)
 
   #   if sw is None:
   #     # New switch
 
   #     sw = TopoSwitch()
+  #     switches_by_dpid[event.dpid] = sw
   #     sw.connect(event.connection)
   #   else:
   #     sw.connect(event.connection)
@@ -384,21 +539,10 @@ class Tutorial (object):
 
 
 
-# save_obj = {numNodes, degree, neighbors, routing, port_offset, switch_dpid_offset, host_dpid_offset}
-
-
 def launch ():
   """
   Starts the component
   """
-
-  with open('graph_items.pickle', 'rb') as handle:
-    numNodes, degree, neighbors, routing, port_offset, switch_dpid_offset, host_dpid_offset = pickle.load(handle)
-    # log.info(numNodes)
-    # log.info(degree)
-
-
-
 
   def start_switch (event):
     log.debug("Controlling %s" % (event.connection,))
@@ -407,6 +551,7 @@ def launch ():
     log.info(event.dpid)
     log.info(event.connection.dpid)
     # print(event.dpid)
+    # switches_by_dpid[event.dpid] = sw
 
   # def _handle_LinkEvent (event):
   #   log.info("\n\n\n WOFNOW ]n\n\n\n")

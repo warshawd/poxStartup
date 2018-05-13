@@ -12,47 +12,115 @@ sys.path.append("../../")
 from pox.ext.jelly_pox import JELLYPOX
 from subprocess import Popen
 from time import sleep, time
-
+import pickle
 
 
 class JellyFishTop(Topo):
     ''' TODO, build your topology here'''
     def build(self):
 
+            numNodes, degree, neighbors, routing, port_offset, switch_dpid_offset, host_dpid_offset = None, None, None, None, None, None, None
 
-            # for i in range(5) :
-            #     name = 'h'
-            #     name += str((i+1))
-            #     host = self.addHost( name )
-            #     hosts.append(host)
-            # for i in range(5) :
-            #     name = 's'
-            #     name += str((i+5))
-            #     switch = self.addSwitch( name )
-            #     self.addLink(hosts[i], switch)
-            #     switches.append(switch)
+            with open('../../graph_items.pickle', 'rb') as handle:
+                numNodes, degree, neighbors, routing, port_offset, switch_dpid_offset, host_dpid_offset = pickle.load(handle)
 
-            # for i in range(5) :
-            #     for j in range(5) :
-            #         if i < j :
-            #             self.addLink( switches[i], switches[j])
 
-            leftHost = self.addHost( 'h1' )
-            rightHost = self.addHost( 'h2' )
-            leftSwitch = self.addSwitch( 's3' )
-            rightSwitch = self.addSwitch( 's4' )
-            # topSwitch = self.addSwitch( 's5')
-            # topHost = self.addHost('h6')
+            def createHost(num) :
+                ip_str= '9.9.9.' + str(num)
+                mac_str = '99:00:00:00:00:'
+                if num < 10 :
+                    mac_str += '0' + str(num)
+                else : #more explicit, if longer
+                    mac_str += str(num)
+                dpid_str = 'h' + str(host_dpid_offset + num) #Can't have DPID 0
+                return self.addHost( dpid_str, ip=ip_str, mac=mac_str)
 
-            # # Add links
-            # # self.addLink( leftHost, rightHost )
+            # leftSwitch = self.addSwitch( 's55', ip='10.6.6.6', mac='00:00:00:00:00:66')
+            def createSwitch(num) :
+                ip_str= '10.10.10.' + str(num)
+                mac_str = '00:00:00:00:00:'
+                if num < 10 :
+                    mac_str += '0' + str(num)
+                else : #more explicit, if longer
+                    mac_str += str(num)
+                dpid_str = 's' + str(switch_dpid_offset + num) #Can't have DPID 0
+                return self.addSwitch( dpid_str, ip=ip_str, mac=mac_str)
 
-            self.addLink( leftHost, leftSwitch )
-            self.addLink( leftSwitch, rightSwitch )
-            self.addLink( rightSwitch, rightHost )
-            # self.addLink( topHost, topSwitch )
-            # self.addLink( leftSwitch, topSwitch )
-            # self.addLink( rightSwitch, topSwitch )
+            def createLink(sw1, sw2, pt1, pt2) :
+                return self.addLink(sw1, sw2, port1=(port_offset + pt2), port2=(port_offset + pt1) )
+
+            switches = {}
+            hosts = {}
+
+            print('\n\n\n' + str(numNodes) + ' ' + str(degree) + '\n\n\n')
+
+            for i in range(numNodes) :
+                switches[i] = createSwitch(i)
+                hosts[i] = createHost(i)
+
+            for i in range(numNodes) :
+                #"self" link from the port that usually routes to my switch, but here routes from my switch to the associated host
+                createLink( switches[i], hosts[i], i, i)
+
+            for i in range(numNodes):
+                for j in neighbors[i] : #connecting i to j via ports j & i respectively [so that if I go to j, I go over port j, etc]
+                    if j >= i : #we've already linked if j < i
+                        createLink( switches[i], switches[j], i, j )
+                        print("\nlinked: " + str(i) + ", " + str(j))
+
+
+
+            # hosts[0] = createHost(0)
+            # hosts[1] = createHost(1)
+            # switches[0] = createSwitch(0)
+            # switches[1] = createSwitch(1)
+
+            # # leftHost.setMAC()
+            # # rightHost.setMAC()
+            # # leftSwitch.setMAC()
+            # # rightSwitch.setMAC()
+
+            # switches[2] = createSwitch(2)
+            # hosts[2] = createHost(2)
+
+            # # # Add links
+            # # # self.addLink( leftHost, rightHost )
+
+            # # dpid==55 -> left switch
+            # # dpid==77 -> left switch
+            # # 10.9.9.9 left host
+            # # 10.5.5.5 right host
+
+            # # dpid==55 :
+            # #     if (10.9.9.9 dest) :
+            # #         send over port 2
+            # #     else :
+            # #         send over port 3
+
+            # # dpid==77 :
+            # #     if (10.9.9.9 dest) :
+            # #         send over port 4
+            # #     else :
+            # #         send over port 5
+
+            # # self.addLink( leftHost, leftSwitch, port1=(port_offset + 0), port2=(port_offset + 0) )
+            # # self.addLink( leftSwitch, rightSwitch, port1=(port_offset + 1), port2=(port_offset + 0) )
+            # # self.addLink( rightSwitch, rightHost, port1=(port_offset + 1), port2=(port_offset + 1) )
+            # # self.addLink( topHost, topSwitch, port1=(port_offset + 2), port2=(port_offset + 2) )
+            # # self.addLink( leftSwitch, topSwitch, port1=(port_offset + 2), port2=(port_offset + 0) )
+            # # self.addLink( rightSwitch, topSwitch, port1=(port_offset + 2), port2=(port_offset + 1) )
+            # createLink(hosts[0], switches[0], 0, 0)
+            # createLink(switches[0], switches[1], 0, 1)
+            # createLink(switches[1], hosts[1], 1, 1)
+            # createLink(hosts[2], switches[2], 2, 2)
+            # createLink(switches[0], switches[2], 0, 2)
+            # createLink(switches[1], switches[2], 1, 2)
+
+            # source #IP address
+            # target #IP address
+            # for source in range(14): #transform into IP address
+            #     for target in range(14): #transform into IP address
+            #         print "\trouting[" + str(source) + "][" + str(target) + "] = " + str(routing[source][target])
 
 
 def experiment(net):
