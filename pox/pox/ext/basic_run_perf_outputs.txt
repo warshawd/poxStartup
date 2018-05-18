@@ -1,0 +1,273 @@
+mininet@mininet-vm:~/poxStartup/pox/pox/ext$ sudo python build_topology.py
+
+
+
+16 4
+
+
+
+
+linked: 0, 6
+
+linked: 0, 8
+
+linked: 0, 14
+
+linked: 0, 15
+
+linked: 1, 3
+
+linked: 1, 9
+
+linked: 1, 12
+
+linked: 1, 15
+
+linked: 2, 3
+
+linked: 2, 4
+
+linked: 2, 9
+
+linked: 2, 10
+
+linked: 3, 5
+
+linked: 3, 11
+
+linked: 4, 11
+
+linked: 4, 12
+
+linked: 4, 13
+
+linked: 5, 12
+
+linked: 5, 13
+
+linked: 5, 15
+
+linked: 6, 10
+
+linked: 6, 11
+
+linked: 6, 13
+
+linked: 7, 8
+
+linked: 7, 10
+
+linked: 7, 14
+
+linked: 7, 15
+
+linked: 8, 9
+
+linked: 8, 11
+
+linked: 9, 14
+
+linked: 10, 13
+
+linked: 12, 14
+warf
+listening
+key, value: 0,9
+key, value: 1,4
+key, value: 2,14
+key, value: 3,8
+key, value: 4,6
+key, value: 5,3
+key, value: 6,5
+key, value: 7,15
+key, value: 8,2
+key, value: 9,7
+key, value: 10,12
+key, value: 11,13
+key, value: 12,1
+key, value: 13,11
+key, value: 14,0
+key, value: 15,10
+
+Server listening on TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[  4] local 9.9.9.0 port 5001 connected with 9.9.9.14 port 54998
+------------------------------------------------------------
+Client connecting to 9.9.9.9, TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[  3] local 9.9.9.0 port 41652 connected with 9.9.9.9 port 5001
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-10.3 sec  1.50 MBytes  1.22 Mbits/sec
+
+
+Server listening on TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[  4] local 9.9.9.1 port 5001 connected with 9.9.9.12 port 53518
+------------------------------------------------------------
+Client connecting to 9.9.9.4, TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[  3] local 9.9.9.1 port 42066 connected with 9.9.9.4 port 5001
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-11.7 sec  2.62 MBytes  1.88 Mbits/sec
+
+
+Server listening on TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+------------------------------------------------------------
+Client connecting to 9.9.9.14, TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[  3] local 9.9.9.2 port 40090 connected with 9.9.9.14 port 5001
+[  4] local 9.9.9.2 port 5001 connected with 9.9.9.8 port 60034
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-13.2 sec  1.88 MBytes  1.19 Mbits/sec
+
+
+Server listening on TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+------------------------------------------------------------
+Client connecting to 9.9.9.8, TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[  3] local 9.9.9.3 port 48122 connected with 9.9.9.8 port 5001
+[  4] local 9.9.9.3 port 5001 connected with 9.9.9.5 port 41734
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-12.1 sec  3.25 MBytes  2.26 Mbits/sec
+
+
+Server listening on TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+------------------------------------------------------------
+Client connecting to 9.9.9.6, TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[  3] local 9.9.9.4 port 53424 connected with 9.9.9.6 port 5001
+[  4] local 9.9.9.4 port 5001 connected with 9.9.9.1 port 42066
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-12.5 sec  2.75 MBytes  1.84 Mbits/sec
+
+------------------------------------------------------------
+Client connecting to 9.9.9.3, TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[  3] local 9.9.9.5 port 41734 connected with 9.9.9.3 port 5001
+[  4] local 9.9.9.5 port 5001 connected with 9.9.9.6 port 34006
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-10.9 sec  4.00 MBytes  3.08 Mbits/sec
+
+------------------------------------------------------------
+Client connecting to 9.9.9.5, TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[  3] local 9.9.9.6 port 34006 connected with 9.9.9.5 port 5001
+[  4] local 9.9.9.6 port 5001 connected with 9.9.9.4 port 53424
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-11.1 sec  1.88 MBytes  1.41 Mbits/sec
+
+------------------------------------------------------------
+Client connecting to 9.9.9.15, TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[  3] local 9.9.9.7 port 50084 connected with 9.9.9.15 port 5001
+[  4] local 9.9.9.7 port 5001 connected with 9.9.9.9 port 44160
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-10.8 sec  2.75 MBytes  2.13 Mbits/sec
+
+[  4] local 9.9.9.8 port 5001 connected with 9.9.9.3 port 48122
+------------------------------------------------------------
+Client connecting to 9.9.9.2, TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[  3] local 9.9.9.8 port 60034 connected with 9.9.9.2 port 5001
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-10.4 sec  2.00 MBytes  1.62 Mbits/sec
+
+------------------------------------------------------------
+Client connecting to 9.9.9.7, TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[  3] local 9.9.9.9 port 44160 connected with 9.9.9.7 port 5001
+[  4] local 9.9.9.9 port 5001 connected with 9.9.9.0 port 41652
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-13.6 sec  1.50 MBytes   927 Kbits/sec
+
+------------------------------------------------------------
+Client connecting to 9.9.9.12, TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[  3] local 9.9.9.10 port 46474 connected with 9.9.9.12 port 5001
+[  4] local 9.9.9.10 port 5001 connected with 9.9.9.15 port 55994
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-19.0 sec  1.88 MBytes   826 Kbits/sec
+
+------------------------------------------------------------
+Client connecting to 9.9.9.13, TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[  3] local 9.9.9.11 port 55630 connected with 9.9.9.13 port 5001
+[  4] local 9.9.9.11 port 5001 connected with 9.9.9.13 port 54436
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-12.3 sec  1.62 MBytes  1.11 Mbits/sec
+
+------------------------------------------------------------
+Client connecting to 9.9.9.1, TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[  3] local 9.9.9.12 port 53518 connected with 9.9.9.1 port 5001
+[  4] local 9.9.9.12 port 5001 connected with 9.9.9.10 port 46474
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-11.3 sec  3.50 MBytes  2.60 Mbits/sec
+
+------------------------------------------------------------
+Client connecting to 9.9.9.11, TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[  3] local 9.9.9.13 port 54436 connected with 9.9.9.11 port 5001
+[  4] local 9.9.9.13 port 5001 connected with 9.9.9.11 port 55630
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-14.1 sec  1.38 MBytes   820 Kbits/sec
+
+------------------------------------------------------------
+Client connecting to 9.9.9.0, TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[  3] local 9.9.9.14 port 54998 connected with 9.9.9.0 port 5001
+[  4] local 9.9.9.14 port 5001 connected with 9.9.9.2 port 40090
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-10.1 sec  3.75 MBytes  3.10 Mbits/sec
+
+[  4] local 9.9.9.15 port 5001 connected with 9.9.9.7 port 50084
+------------------------------------------------------------
+Client connecting to 9.9.9.10, TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[  3] local 9.9.9.15 port 55994 connected with 9.9.9.10 port 5001
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-11.0 sec  2.38 MBytes  1.82 Mbits/sec
+
+LOL
+*** Ping: testing ping reachability
+h200 -> h201 h202 h203 h204 h205 h206 h207 h208 h209 h210 h211 h212 h213 h214 h215 
+h201 -> h200 h202 h203 h204 h205 h206 h207 h208 h209 h210 h211 h212 h213 h214 h215 
+h202 -> h200 h201 h203 h204 h205 h206 h207 h208 h209 h210 h211 h212 h213 h214 h215 
+h203 -> h200 h201 h202 h204 h205 h206 h207 h208 h209 h210 h211 h212 h213 h214 h215 
+h204 -> h200 h201 h202 h203 h205 h206 h207 h208 h209 h210 h211 h212 h213 h214 h215 
+h205 -> h200 h201 h202 h203 h204 h206 h207 h208 h209 h210 h211 h212 h213 h214 h215 
+h206 -> h200 h201 h202 h203 h204 h205 h207 h208 h209 h210 h211 h212 h213 h214 h215 
+h207 -> h200 h201 h202 h203 h204 h205 h206 h208 h209 h210 h211 h212 h213 h214 h215 
+h208 -> h200 h201 h202 h203 h204 h205 h206 h207 h209 h210 h211 h212 h213 h214 h215 
+h209 -> h200 h201 h202 h203 h204 h205 h206 h207 h208 h210 h211 h212 h213 h214 h215 
+h210 -> h200 h201 h202 h203 h204 h205 h206 h207 h208 h209 h211 h212 h213 h214 h215 
+h211 -> h200 h201 h202 h203 h204 h205 h206 h207 h208 h209 h210 h212 h213 h214 h215 
+h212 -> h200 h201 h202 h203 h204 h205 h206 h207 h208 h209 h210 h211 h213 h214 h215 
+h213 -> h200 h201 h202 h203 h204 h205 h206 h207 h208 h209 h210 h211 h212 h214 h215 
+h214 -> h200 h201 h202 h203 h204 h205 h206 h207 h208 h209 h210 h211 h212 h213 h215 
+h215 -> h200 h201 h202 h203 h204 h205 h206 h207 h208 h209 h210 h211 h212 h213 h214 
+*** Results: 0% dropped (240/240 received)
