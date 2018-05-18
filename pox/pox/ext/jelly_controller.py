@@ -48,6 +48,10 @@ from pox.openflow.discovery import Discovery
 import time
 import pickle
 
+from pox.lib.packet.packet_utils import checksum
+
+import random
+
 
 log = core.getLogger()
 
@@ -64,9 +68,13 @@ MAX_BUFFERED_PER_IP = 5
 # Maximum time to hang on to a buffer for an unknown IP in seconds
 MAX_BUFFER_TIME = 5
 
-numNodes, degree, neighbors, routing, port_offset, switch_dpid_offset, host_dpid_offset = None, None, None, None, None, None, None
+numNodes, degree, neighbors, routing_vanilla = None, None, None, None
+ecmp8_routing, ecmp64_routing, kshortest_routing, kshortest_routing_paths = None, None, None, None
+kShortest, port_offset, switch_dpid_offset, host_dpid_offset = None, None, None, None
 with open('graph_items.pickle', 'rb') as handle:
-    numNodes, degree, neighbors, routing, port_offset, switch_dpid_offset, host_dpid_offset = pickle.load(handle)
+    numNodes, degree, neighbors, routing_vanilla, ecmp8_routing, ecmp64_routing, kshortest_routing, kshortest_routing_paths, kShortest, port_offset, switch_dpid_offset, host_dpid_offset = pickle.load(handle)
+
+packet_num = 0
 
 class Entry (object):
   """
@@ -112,6 +120,17 @@ class Tutorial (object):
     connection.addListeners(self)
 
     self.dpid = dpid
+
+    # self.robin = 0
+
+    # self.robin_per_route_node = {}
+    #fine to do expensive stuff during initialization
+    # for i in range(numNodes) :
+    #    self.robin_per_route_node[i] = {}
+    #   for j in range(numNodes) :
+    #     self.robin_per_route_node[i][j] = {}
+    #     for k in range(numNodes) :
+    #       self.robin_per_route_node[i][j][k] = 0
 
     # Use this table to keep track of which ethernet address is on
     # which switch port (keys are MACs, values are ports).
@@ -281,8 +300,11 @@ class Tutorial (object):
     arpp = packet.find('arp')
     ip = packet.find('ipv4')
     if arpp is not None :
+      # log.info("spageti")
+      # log.info(arpp.next)
       a = packet.next
       dest_ip_str = str(a.protodst)
+      src_ip_str = str(a.protosrc)
 
       # msg = of.ofp_packet_out(in_port = inport, data = event.ofp,
       #     action = of.ofp_action_output(port = out_port))
@@ -290,6 +312,7 @@ class Tutorial (object):
       # return
     elif ip is not None :
       dest_ip_str = str(ip.dstip)
+      src_ip_str = str(ip.srcip)
     else :
       # This packet isn't IP!
       log.info("\n\n\nWELP\n\n\n")
@@ -299,8 +322,125 @@ class Tutorial (object):
 
     # dest = int(ip_str.split('.')[3])
 
-    out_port = routing[self.dpid - switch_dpid_offset][int(dest_ip_str.split('.')[3])] +  port_offset
-    log.info("\n" + dest_ip_str + "  " + str(out_port))
+    me_id = self.dpid - switch_dpid_offset
+    target_id = int(dest_ip_str.split('.')[3])
+    # log.info(dest_ip_str)
+    # log.info("SRC")
+    # log.info(src_ip_str)
+    source_id = int(src_ip_str.split('.')[3])
+    # log.info(source_id)
+
+    #all the inefficiency of computing this is handled in setup now!
+
+    #note: this actually does load balancing even for the weighted cases
+    #(e.g. for me->x->dst, me->x->q->dst, me->y->dst, twice as many packets should get sent to x as y)
+    #which we do!  because when we computed this dictionary, it will have 2 elements that say x next, and one saying y
+
+    # ROUTING_TYPE[source_id][target_id][me_id] will give us all routing options for this flow, from this node, and will be weighted
+    # - e.g. the list will have 2 identical options if they should be weighted more
+    # options = ecmp64_routing[source_id][target_id][me_id]
+    # options = ecmp8_routing[source_id][target_id][me_id]
+
+    # self.robin_per_route_node[source_id][target_id][me_id]
+    if me_id == target_id :
+      out_port = me_id + port_offset
+      self.resend_packet(packet_in, out_port)
+      # self.robin += 1
+      return
+
+
+    # log.info("SPAG")
+    # log.info(str(source_id) + " " + str(target_id) + " " + str(me_id))
+
+
+
+    options, options_len = ecmp8_routing[source_id][target_id]
+    # log.info(options)
+    # log.info(packet_in)
+    # log.info(packet_in.data)
+    # log.info(packet_in.data[:4])
+    # log.info(packet_in.data[:4])
+    # log.info(packet.payload)
+
+    #this is LAST REMAINING PART - need to find some way to "hash" packet s.t. it always ends up with same hash
+    # bucketize = int(packet_in.total_len)
+    # bucketize = int(checksum(packet_in.data))
+    bucketize = int(packet_in.total_len)
+    if ip is not None :
+      bucketize = ip.csum
+    bucketize = bucketize % options_len
+
+    # options_len = len(options) #we can also include this in the precomputed data structure, if we want more efficiency -e.g. a tuple of len & the options list
+    
+    #note: because the packet always hashes to the same bucket, we will never look up a path we are not on
+    #(b/c the only way the packet could get to this switch was by following a path that we are on, and it
+    #will hash to that same bucket)
+    
+    # out_port = options[bucketize%options_len][me_id] + port_offset
+    #(1)
+    # out_port = options[0][me_id] + port_offset
+
+    #(2)
+    out_port = options[bucketize][me_id] + port_offset
+
+    #(3)
+    # out_port = options[bucketize][me_id] + port_offset
+    # if True :
+    #   out_port = options[0][me_id] + port_offset
+
+    # options = kshortest_routing[source_id][target_id][me_id]
+    # paths = kshortest_routing_paths[source_id][target_id]
+
+    # random_source = source_id + target_id + me_id #THIS IS NOT GOOD, JUST SANITY CHECKING
+    # if source_id == 1 and target_id == 5 :
+    #   log.info("SPAG")
+    #   log.info(str(source_id) + " " + str(target_id) + " " + str(me_id))
+    #   log.info(options)
+    #   log.info(paths)
+    #   log.info(packet_in)
+      # log.info(packet.next)
+      # log.info(aarp)
+      # log.info(ip)
+
+    # if source_id == 3 and target_id == 5 :
+    #   log.info("SPAG")
+    #   log.info(str(source_id) + " " + str(target_id) + " " + str(me_id))
+    #   log.info(options)
+    #   log.info(paths)
+    # out_port = random.choice(options) + port_offset
+    # bucketize = int(packet_in.buffer_id)
+    # option_len = len(options)
+    # # out_port = options[option_len - 1] + port_offset
+    # out_port = options[(bucketize % option_len)] + port_offset
+    # self.robin += 1 #this works out to be pretty much random & goes according to option weights as planned
+
+
+    # def find_next_hop(path, me_id) :
+    #   end = len(path)
+    #   # for i in range(end, -1, -1) :
+    #   for i in range(end) :
+    #     rev_i = (end - 1) - i
+    #     if me_id == path[rev_i] :
+    #       if rev_i == (end - 1) :
+    #         return me_id #we are last hop - go to host
+    #       else :
+    #         return path[rev_i + 1] #next hop
+    #   return -1 #we're not on this path...
+
+    # if target_id == me_id :
+    #   out_port = me_id + port_offset
+    # else :
+    #   paths = ecmp8_routing[source_id][target_id] #we could just shuffle this - that would actually do the right thing!
+    #   for path in paths :
+    #     next_hop = find_next_hop(path) #we are necessarily on one of these paths
+    #     if next_hop != -1 :
+    #       out_port = next_hop + port_offset
+    # if i in range(2) :
+    #   out_port += 1
+    # x = 0
+
+    # out_port = routing_vanilla[me_id][target_id] +  port_offset
+    # log.info("\n" + dest_ip_str + "  " + str(out_port))
 
     # log.info(self.dpid)
     # if (self.dpid == switch_dpid_offset + 0) :
@@ -329,6 +469,10 @@ class Tutorial (object):
 
     # dest_port = dest #here coincidentally the same, not true in general esp for nontrivial topologies
 
+
+    
+    # if me_id == target_id :
+    #   out_port = me_id + port_offset
 
     self.resend_packet(packet_in, out_port)#dest_port)
 
@@ -382,6 +526,7 @@ class Tutorial (object):
 
 # iperf -p -8 (8 flows)
 
+# https://stackoverflow.com/questions/30496161/how-to-set-bandwidth-on-mininet-custom-topology
 
 
 # save_obj = {numNodes, degree, neighbors, routing, port_offset, switch_dpid_offset, host_dpid_offset}
@@ -393,7 +538,7 @@ def launch ():
   """
 
   with open('graph_items.pickle', 'rb') as handle:
-    numNodes, degree, neighbors, routing, port_offset, switch_dpid_offset, host_dpid_offset = pickle.load(handle)
+    numNodes, degree, neighbors, routing_vanilla, ecmp8_routing, ecmp64_routing, kshortest_routing, kshortest_routing_paths, kShortest, port_offset, switch_dpid_offset, host_dpid_offset = pickle.load(handle)
     # log.info(numNodes)
     # log.info(degree)
 
