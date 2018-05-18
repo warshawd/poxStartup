@@ -153,9 +153,11 @@ def genPermutationTraffic(num_items) :
 
 
 def experiment(net):
+        flows_8 = False
+
         net.start()
         sleep(3) #3
-        print 'warf'
+        print 'Begin'
         # CLI( net )
         hosts = net.hosts
         # h1 = [hosts[0],hosts[1],hosts[2],hosts[3],hosts[4],hosts[5]]
@@ -175,7 +177,7 @@ def experiment(net):
 
         for k, v in traffic.items() :
             print("key, value: " + str(k) + "," + str(v))
-            if False: #set to True for 8 flows
+            if flows_8: #set to True for 8 flows
                 # iperf_cmd = 'iperf -t 10 -i 0.5 -c 9.9.9.' + str(v) + ' &'
                 iperf_cmd = 'iperf -t 10 -c 9.9.9.' + str(v) + ' &'
                 for i in range(7) :
@@ -192,7 +194,7 @@ def experiment(net):
             results.append(x)
         for r in results :
             print r
-        print "LOL"
+        print "Done"
 
         sleep(1)
         quietRun( "pkill -9 iperf" )
